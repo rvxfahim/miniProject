@@ -7,14 +7,45 @@ Rectangle {
     id: windowPage2
     width: 1280
     height: 641
-    property alias textArea: textArea
     
+
+
     Image {
         id: image
+        x: 0
+        y: 0
+        width: 1280
+        height: 641
         //        width: parent.height
         //        height: parent.width
         source: "page2_bg.jpg"
+        enabled: true
         fillMode: Image.PreserveAspectCrop
+
+    }
+    DialControl {
+        id: tempGauge
+        x: 79
+        y: 333
+    }
+    Slider {
+        id: slider
+        x: 28
+        y: 185
+        rotation: -90
+        value: 0.5
+
+        Text {
+            id: text1
+            y: 12
+            text: qsTr("Set Temperature")
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            font.pixelSize: 18
+            anchors.leftMargin: 150
+            anchors.bottomMargin: 12
+            rotation: 90
+        }
     }
 
     ChartView {
@@ -25,7 +56,7 @@ Rectangle {
         height: 417
         LineSeries {
             id: tempSeries
-            name: "SplineSeries"
+            name: "Inside Temperature"
             axisX: axisX
             axisY: yAxis
 
@@ -44,66 +75,6 @@ Rectangle {
             max: 50
             tickCount: 5
             //                            labelFormat: "%.0f"
-        }
-    }
-
-    GroupBox {
-        id: groupBox
-        x: 0
-        y: 0
-        width: 400
-        height: 641
-        title: qsTr("")
-
-        Grid {
-            id: grid
-            width: parent.width
-            height: 400
-            padding: 50
-            spacing: 20
-            rows: 2
-            columns: 2
-
-
-            Rectangle {
-                id: rectangle
-                width: parent.width
-                height: 230
-                color: "#ffffff"
-
-                TextEdit {
-                    id: textEdit
-                    width: rectangle.width
-                    height: rectangle.height
-                    text: qsTr("")
-                    font.pixelSize: 12
-                }
-            }
-
-            Button {
-                id: button
-                text: qsTr("Send")
-                onClicked: {
-                    tempSeries.remove(0)
-                    tempSeries.append(5,2)
-                    backend.sendBtn()
-                }
-            }
-
-            Rectangle {
-                id: rectangle1
-                width: parent.width
-                height: 230
-                color: "#ffffff"
-
-                TextArea {
-                    id: textArea
-                    width: rectangle1.width
-                    height: rectangle1.height
-                    enabled: false
-                    placeholderText: qsTr("Received From Port")
-                }
-            }
         }
     }
     Connections {
@@ -125,6 +96,7 @@ Rectangle {
             }
         }
     }
+
 
 
 

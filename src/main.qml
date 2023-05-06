@@ -106,7 +106,7 @@ Window {
                         id: comboBoxBauds
                         width: parent.width
                         height: 61
-                        model: ["9600", "115200"]
+                        model: ["9600", "115200","500000"]
                     }
 
                     Button {

@@ -45,6 +45,7 @@ class SerialThread(QThread):
         self.ser = serial.Serial()
 
     def run(self):
+        print("serial thread started")
         while True:
             if main.connectionEstablished:
                 try:
@@ -52,10 +53,15 @@ class SerialThread(QThread):
                     # try to load json string, may not be valid json
                     try:
                         jsonData = json.loads(jsonString)
-                        main.textReceived.emit(jsonData['inT'],jsonData['tm'])
-                        main.tempValue.emit(jsonData['inT'],jsonData['tm'])
+                        #if json has inT and tm keys, emit signal
+                        if 'inT' in jsonData and 'tm' in jsonData:
+                            main.textReceived.emit(jsonData['inT'],jsonData['tm'])
+                            main.tempValue.emit(jsonData['inT'],jsonData['tm'])
+                        else:
+                            print(jsonData)
                     except:
-                        print("failed to load json string")
+                        # print("failed to load json string ")
+                        pass
                 except:
                     print("failed to read serial data")
                     #try to stop serial thread
@@ -63,6 +69,7 @@ class SerialThread(QThread):
                         self.terminate()
                     except:
                         print("thread probably not running")
+                self.sendSerial()
             else:
                 print("connection not established")
                 #try to stop serial thread
@@ -70,6 +77,16 @@ class SerialThread(QThread):
                     self.terminate()
                 except:
                     print("thread probably not running")
+            
+    def sendSerial(self):
+        if len(main.queue) > 0:
+            try:
+                self.ser.write(main.queue.pop(0).encode('utf-8'))
+                #send crlf
+                self.ser.write(b'\r')
+                print("json string sent to serial port by sendSerial")
+            except:
+                print("failed to send json string to serial port")
 class MainWindow(QObject):
     
     def __init__(self):
@@ -81,6 +98,8 @@ class MainWindow(QObject):
     appLoad = Signal()
     connectionEstablished = False
     ser = None
+    busBusy = False
+    queue = []
     #getPorts called after app is loaded
     @Slot()
     def getPorts(self):
@@ -96,7 +115,7 @@ class MainWindow(QObject):
     def connectSerial(self, port, baud):
         #try to connect to serial port
         try:
-            self.ser = serial.Serial(port, baud)
+            self.ser = serial.Serial(port, baud, timeout=5, write_timeout=0)
             self.ser.close()
             self.ser.open()
             print("connected to serial port")
@@ -127,7 +146,19 @@ class MainWindow(QObject):
             print("serial port closed")
         except:
             print("failed to close serial port")
-        self.connectionEstablished = False            
+        self.connectionEstablished = False
+    @Slot(float)
+    def setTemp(self, val):
+        #format value to 2 decimal places
+        val = round(val, 2)
+        #make a json string with temperature value
+        jsonString = json.dumps({"setT": val})
+        #add json string to queue, replace if queue has previous setT json string
+        for i in range(len(self.queue)):
+            if 'setT' in self.queue[i]:
+                self.queue[i] = jsonString
+                break
+        self.queue.append(jsonString)
 if __name__ == "__main__":
 
     # app = QGuiApplication(sys.argv)
