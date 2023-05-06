@@ -5,7 +5,7 @@ import QtQuick.Layouts 6.3
 import QtCharts 2.5
 Rectangle {
     id: windowPage2
-    width: 1005
+    width: 1280
     height: 641
     property alias textArea: textArea
     
@@ -15,6 +15,36 @@ Rectangle {
         //        height: parent.width
         source: "page2_bg.jpg"
         fillMode: Image.PreserveAspectCrop
+    }
+
+    ChartView {
+        id: chartView
+        x: 469
+        y: 216
+        width: 803
+        height: 417
+        LineSeries {
+            id: tempSeries
+            name: "SplineSeries"
+            axisX: axisX
+            axisY: yAxis
+
+        }
+        ValueAxis {
+            id: axisX
+            min: 0
+            max: 50 // set the initial max value to 50
+            tickCount: 10
+            //                            labelFormat: "%.0f"
+        }
+
+        ValueAxis {
+            id: yAxis
+            min: 0
+            max: 50
+            tickCount: 5
+            //                            labelFormat: "%.0f"
+        }
     }
 
     GroupBox {
@@ -74,34 +104,6 @@ Rectangle {
                     placeholderText: qsTr("Received From Port")
                 }
             }
-
-            ChartView {
-                id: chartView
-                width: 300
-                height: 300
-                LineSeries {
-                         id: tempSeries
-                         name: "SplineSeries"
-                         axisX: axisX
-                         axisY: yAxis
-
-                     }
-                ValueAxis {
-                            id: axisX
-                            min: 0
-                            max: 50 // set the initial max value to 50
-                            tickCount: 10
-//                            labelFormat: "%.0f"
-                        }
-
-                        ValueAxis {
-                            id: yAxis
-                            min: 0
-                            max: 50
-                            tickCount: 5
-//                            labelFormat: "%.0f"
-                        }
-            }
         }
     }
     Connections {
@@ -123,6 +125,7 @@ Rectangle {
             }
         }
     }
+
 
 
 }
