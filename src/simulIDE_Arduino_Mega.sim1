@@ -1,0 +1,21 @@
+<circuit version="1.0.0-SR0" rev="1320" stepSize="1000000" stepsPS="1000000" NLsteps="100000" reaStep="1000000" animate="0" >
+
+<item itemtype="Subcircuit" CircId="Mega-1" mainComp="false" Show_id="true" Show_Val="false" Pos="816,472" rotation="0" hflip="1" vflip="1" label="Mega-1" idLabPos="0,-20" labelrot="0" valLabPos="-16,20" valLabRot="0" Logic_Symbol="false">
+<mainCompProps itemtype="MCU" CircId="1_mega2560-63" mainComp="true" Show_id="false" Show_Val="false" Pos="20,20" rotation="0" hflip="1" vflip="1" label="1_mega2560-63" idLabPos="0,-20" labelrot="0" valLabPos="-16,20" valLabRot="0" Frequency="16 MHz" Program="C:/Users/fahim/Documents/PlatformIO/Projects/miniProject/.pio/build/megaatmega2560/firmware.hex" Auto_Load="false" Rst_enabled="true" Ext_Osc="false" Wdt_enabled="false" />
+</item>
+
+<item itemtype="Potentiometer" CircId="Potentiometer-2" mainComp="false" ShowProp="Resistance" Show_id="false" Show_Val="true" Pos="1032,556" rotation="0" hflip="1" vflip="1" label="Potentiometer-2" idLabPos="-16,-40" labelrot="0" valLabPos="15,-20" valLabRot="0" Resistance="1000 Ω" Value_Ohm="809 Ω" />
+
+<item itemtype="SerialPort" CircId="SerialPort-6" mainComp="false" Show_id="true" Show_Val="false" Pos="888,416" rotation="0" hflip="1" vflip="1" label="SerialPort-6" idLabPos="-20,-32" labelrot="0" valLabPos="-16,20" valLabRot="0" Port="COM8" Baudrate="9600 _Bauds" DataBits="8 _Bits" StopBits="1 _Bits" />
+
+<item itemtype="Connector" uid="Connector-3" startpinid="Potentiometer-2-PinM" endpinid="Mega-1-A0" pointList="1032,572,1032,640,968,640" />
+
+<item itemtype="Connector" uid="Connector-4" startpinid="Potentiometer-2-PinB" endpinid="Mega-1-GND2" pointList="1048,556,1048,672,968,672" />
+
+<item itemtype="Connector" uid="Connector-5" startpinid="Potentiometer-2-PinA" endpinid="Mega-1-5V00" pointList="1016,556,1016,680,968,680" />
+
+<item itemtype="Connector" uid="Connector-7" startpinid="Mega-1-1" endpinid="SerialPort-6-pin1" pointList="824,600,776,600,776,424,848,424" />
+
+<item itemtype="Connector" uid="Connector-8" startpinid="SerialPort-6-pin0" endpinid="Mega-1-0" pointList="848,408,792,408,792,592,824,592" />
+
+</circuit>

@@ -3,6 +3,7 @@ import QtQuick.Controls 6.3
 import QtQuick.Controls.Material 2.15
 import QtQuick.Layouts 6.3
 import QtCharts 2.5
+import QtQuick.Extras
 Rectangle {
     id: windowPage2
     width: 1280
@@ -27,25 +28,6 @@ Rectangle {
         id: tempGauge
         x: 79
         y: 333
-    }
-    Slider {
-        id: slider
-        x: 28
-        y: 185
-        rotation: -90
-        value: 0.5
-
-        Text {
-            id: text1
-            y: 12
-            text: qsTr("Set Temperature")
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            font.pixelSize: 18
-            anchors.leftMargin: 150
-            anchors.bottomMargin: 12
-            rotation: 90
-        }
     }
 
     ChartView {

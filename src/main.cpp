@@ -6,12 +6,12 @@
 // Define the pins for the cooling power input
 const int coolingPowerPin = A0;
 
-  // Define the constants for the thermal model
+// Define the constants for the thermal model
 const float wallThermalResistance = 0.005; // in K/W
-const float roomVolume = 20; // in m^3
-const float roomHeatCapacity = 1000; // in J/K
-const float roomInitialTemperature = 30; // in degC
-const float outsideTemperature = 30; // in degC
+const float roomVolume = 20;               // in m^3
+const float roomHeatCapacity = 1000;       // in J/K
+const float roomInitialTemperature = 30;   // in degC
+const float outsideTemperature = 30;       // in degC
 
 // Define the variables for the thermal model
 float insideTemperature = roomInitialTemperature;
@@ -30,15 +30,28 @@ void simulationTask(void *pvParameters);
 void printTask(void *pvParameters);
 void receiveTask(void *pvParameters);
 
-void setup() {
+void sendAck()
+{
+  char jsonStringBuffer[JSON_BUFFER_SIZE];
+  StaticJsonDocument<10> doc;
+  // Add key-value pairs to the document
+  doc["ack"] = 1;
+  size_t jsonStringSize = measureJson(doc);
+  serializeJson(doc, jsonStringBuffer, jsonStringSize + 1);
+  // Send the JSON string to the output task
+  xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+}
+
+void setup()
+{
   // Initialize the serial communication
   // analogReference(EXTERNAL);
   pinMode(coolingPowerPin, INPUT);
   pinMode(9, OUTPUT);
   Serial.begin(9600);
-  Serial1.begin(9600);
-  Serial.setTimeout(10);
-  Serial1.setTimeout(10);
+  // Serial1.begin(9600);
+  Serial.setTimeout(200);
+  // Serial1.setTimeout(10);
   queueHandle = xQueueCreate(10, JSON_BUFFER_SIZE);
   // Serial.print(F("configTICK_RATE_HZ:"));
   // Serial.println(configTICK_RATE_HZ);
@@ -58,21 +71,24 @@ void setup() {
   vTaskStartScheduler();
 }
 
-void loop() {
+void loop()
+{
   // This function should never be called
 }
 
-void simulationTask(void *pvParameters) {
+void simulationTask(void *pvParameters)
+{
   // Allocate a buffer for the JSON string
   char jsonStringBuffer[JSON_BUFFER_SIZE];
   // Loop forever
-  while (1) {
-    
-    //if desired temperature is lower than inside temperature then use cooling power
+  while (1)
+  {
+
+    // if desired temperature is lower than inside temperature then use cooling power
     if (desiredTemperature < insideTemperature)
     {
-        // Read the cooling power from the input
-    coolingPower = analogRead(coolingPowerPin) * 11.71875; // convert the ADC value to W
+      // Read the cooling power from the input
+      coolingPower = analogRead(coolingPowerPin) * 11.71875; // convert the ADC value to W
     }
     else
     {
@@ -83,7 +99,8 @@ void simulationTask(void *pvParameters) {
     float heatTransfer = (outsideTemperature - insideTemperature) / wallThermalResistance;
 
     // If cooling power is present, subtract it from the heat transfer
-    if (coolingPower > 0) {
+    if (coolingPower > 0)
+    {
       heatTransfer -= coolingPower;
     }
 
@@ -93,54 +110,58 @@ void simulationTask(void *pvParameters) {
     // Calculate the new inside temperature
     insideTemperature += temperatureChange;
     StaticJsonDocument<32> doc;
-    // Add key-value pairs to the document   
+    // Add key-value pairs to the document
     doc["outT"] = round(outsideTemperature * 100.0) / 100.0;
     doc["inT"] = round(insideTemperature * 100.0) / 100.0;
     doc["watt"] = round(coolingPower * 100.0) / 100.0;
     doc["tm"] = round(millis() / 10.0) / 100.0;
     size_t jsonStringSize = measureJson(doc);
     serializeJson(doc, jsonStringBuffer, jsonStringSize + 1);
-     // Send the JSON string to the output task
+    // Send the JSON string to the output task
     xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
     // Delay for a short time before repeating the loop
-    vTaskDelay(pdMS_TO_TICKS(200));
+    vTaskDelay(pdMS_TO_TICKS(300));
   }
 }
 
-void printTask(void *pvParameters) {
+void printTask(void *pvParameters)
+{
   // Loop forever
-  while (1) {
+  while (1)
+  {
     // Create a JSON document
     char jsonStringBuffer[JSON_BUFFER_SIZE];
     xQueueReceive(queueHandle, &jsonStringBuffer, portMAX_DELAY);
     Serial.println(jsonStringBuffer);
-    //vTaskDelay(pdMS_TO_TICKS(50));
+    // vTaskDelay(pdMS_TO_TICKS(50));
   }
 }
 
-void receiveTask(void *pvParameters) {
+void receiveTask(void *pvParameters)
+{
   // Loop forever
-  while (1) {
-    //read from serial, expecting key setT and value
-    //if key is setT, set the outside temperature to the value
-    if (Serial1.available()>0)
+  while (1)
+  {
+    // read from serial, expecting key setT and value
+    // if key is setT, set the outside temperature to the value
+    if (Serial.available() > 0)
     {
-      String input = Serial1.readStringUntil('\r');
-      Serial1.println("raw input: " + input);
+      String input = Serial.readStringUntil('\r');
+      // Serial.println("raw input: " + input);
       StaticJsonDocument<20> doc;
       DeserializationError error = deserializeJson(doc, input);
-      if (error) {
-        Serial1.print(F("deserializeJson() failed: "));
-        Serial1.println(error.c_str());
+      if (error)
+      {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.c_str());
       }
       else
       {
-        if(doc.containsKey("setT"))
+        if (doc.containsKey("setT"))
         {
           float setT = doc["setT"];
           desiredTemperature = setT;
-          Serial1.print(F("setT: "));
-          Serial1.println(setT);
+          sendAck();
         }
       }
     }

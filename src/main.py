@@ -9,8 +9,15 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import Qt, QObject, Signal, Slot, Property, QThread
 from PySide6 import QtCharts
+from PySide6.QtCore import QTimer
+from numba import jit
 import time
 import json
+timeout = False
+def ackTimeout(self):
+        global timeout
+        timeout = True
+        print("ack timeout")
 def serial_ports():
     """ Lists serial port names
         :raises EnvironmentError:
@@ -57,8 +64,12 @@ class SerialThread(QThread):
                         if 'inT' in jsonData and 'tm' in jsonData:
                             main.textReceived.emit(jsonData['inT'],jsonData['tm'])
                             main.tempValue.emit(jsonData['inT'],jsonData['tm'])
+                        elif 'ack' in jsonData:
+                            main.ack = jsonData['ack']
+                            print("ack received")
                         else:
                             print(jsonData)
+                        # print("got some string")
                     except:
                         # print("failed to load json string ")
                         pass
@@ -69,7 +80,7 @@ class SerialThread(QThread):
                         self.terminate()
                     except:
                         print("thread probably not running")
-                self.sendSerial()
+
             else:
                 print("connection not established")
                 #try to stop serial thread
@@ -78,7 +89,41 @@ class SerialThread(QThread):
                 except:
                     print("thread probably not running")
             
+    
+class SerialsendThread(QThread):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.ser = serial.Serial()
+    
+    def run(self):
+        print("serialsend thread running")
+        global timeout
+        while True:
+            self.jitSend()
+    # @jit(nopython=True)
+    def jitSend(self):
+        start_time = time.time()
+        if main.connectionEstablished:
+            self.sendSerial()
+            # if main.ack is not 1 or timeout is True, stay in while loop
+            print("waiting for ack or timeout in while loop")
+            while main.ack != 1:
+                difference = time.time()-start_time
+                if difference > 1:
+                    break
+                # print(time.time()-start_time)
+            start_time = time.time()
+            print("ack reset to None")
+            main.ack = None
+        else:
+            print("connection not established")
+            #try to stop serial thread
+            try:
+                self.terminate()
+            except:
+                print("thread probably not running")
     def sendSerial(self):
+        print("sendSerial called")
         if len(main.queue) > 0:
             try:
                 self.ser.write(main.queue.pop(0).encode('utf-8'))
@@ -87,11 +132,14 @@ class SerialThread(QThread):
                 print("json string sent to serial port by sendSerial")
             except:
                 print("failed to send json string to serial port")
+    
+
 class MainWindow(QObject):
     
     def __init__(self):
         QObject.__init__(self)
         self.serialThread = SerialThread(self)
+        self.serialsendThread = SerialsendThread(self)
     listofserialportsReceived = Signal(list)
     textReceived = Signal(float, float)
     tempValue = Signal(float, float)
@@ -99,6 +147,7 @@ class MainWindow(QObject):
     connectionEstablished = False
     ser = None
     busBusy = False
+    ack = None
     queue = []
     #getPorts called after app is loaded
     @Slot()
@@ -123,7 +172,9 @@ class MainWindow(QObject):
             self.ser.reset_input_buffer()
             self.connectionEstablished = True
             self.serialThread.ser = self.ser
+            self.serialsendThread.ser = self.ser
             self.serialThread.start()
+            self.serialsendThread.start()
         except:
             print("failed to connect to serial port")
             self.connectionEstablished = False
