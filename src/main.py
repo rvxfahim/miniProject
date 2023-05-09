@@ -103,27 +103,38 @@ class SerialsendThread(QThread):
         print("serialsend thread running")
         global timeout
         while True:
+            print("jitsend calling")
             self.jitSend()
+            print("sleep for 25ms")
             QThread.msleep(25)
     # @jit(nopython=True)
     def jitSend(self):
+        # print("getting time")
         start_time = time.time()
         if main.connectionEstablished:
             #keep a backup of the 1st item in queue
-            backup = main.queue[0]
+            # print("connection established")
+            try:
+                backup = main.queue[0]
+            except:
+                backup = None
+                # print("no item in queue")
+            # print("backup created")
             self.sendSerial()
             # if main.ack is not 1 or timeout is True, stay in while loop
-            print("waiting for ack or timeout in while loop")
+            # print("waiting for ack or timeout in while loop")
             while main.ack != 1:
                 difference = time.time()-start_time
-                print(difference)
+                # print(difference)
                 if difference > 1:
                     #if timeout, restore backup in queue
-                    main.queue.insert(0, backup)
+                    # print("putting backup in queue")
+                    if backup != None:
+                        main.queue.insert(0, backup)
                     break
                 # print(time.time()-start_time)
             start_time = time.time()
-            print("ack reset to None")
+            # print("ack reset to None")
             main.ack = None
         else:
             print("connection not established")
@@ -133,13 +144,13 @@ class SerialsendThread(QThread):
             except:
                 print("thread probably not running")
     def sendSerial(self):
-        print("sendSerial called")
+        # print("sendSerial called")
         if len(main.queue) > 0:
             try:
                 self.ser.write(main.queue.pop(0).encode('utf-8'))
                 #send crlf
                 self.ser.write(b'\r')
-                print("json string sent to serial port by sendSerial")
+                # print("json string sent to serial port by sendSerial")
             except:
                 print("failed to send json string to serial port")
     
