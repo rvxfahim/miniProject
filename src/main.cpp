@@ -12,7 +12,8 @@ const float roomVolume = 20;               // in m^3
 const float roomHeatCapacity = 1000;       // in J/K
 const float roomInitialTemperature = 30;   // in degC
 const float outsideTemperature = 30;       // in degC
-
+bool comp[2]={false,false};
+bool initState = true;
 // Define the variables for the thermal model
 float insideTemperature = roomInitialTemperature;
 float coolingPower = 0;
@@ -21,6 +22,8 @@ float desiredTemperature = 0;
 TaskHandle_t simulationTaskHandle;
 TaskHandle_t printTaskHandle;
 TaskHandle_t receiveTaskHandle;
+TaskHandle_t compressorTaskHandle;
+TaskHandle_t loadBalanceTaskHandle;
 // Define the queue handle
 QueueHandle_t queueHandle;
 // Define the size of the JSON buffer
@@ -29,6 +32,8 @@ const size_t JSON_BUFFER_SIZE = JSON_OBJECT_SIZE(4) + 40;
 void simulationTask(void *pvParameters);
 void printTask(void *pvParameters);
 void receiveTask(void *pvParameters);
+void compressorTask(void *pvParameters);
+void loadBalanceTask(void *pvParameters);
 
 void sendAck()
 {
@@ -67,6 +72,12 @@ void setup()
 
   // Create receive task
   xTaskCreate(receiveTask, "Receive Task", 512, NULL, 1, &receiveTaskHandle);
+  // create compressor task
+  xTaskCreate(compressorTask, "Compressor Task", 512, NULL, 2, &compressorTaskHandle);
+  vTaskSuspend(compressorTaskHandle);
+  // create load balance task
+  xTaskCreate(loadBalanceTask, "Load Balance Task", 128, NULL, 2, &loadBalanceTaskHandle);
+  vTaskSuspend(loadBalanceTaskHandle);
   // Start the scheduler
   vTaskStartScheduler();
 }
@@ -85,15 +96,16 @@ void simulationTask(void *pvParameters)
   {
 
     // if desired temperature is lower than inside temperature then use cooling power
-    if (desiredTemperature < insideTemperature)
-    {
-      // Read the cooling power from the input
-      coolingPower = analogRead(coolingPowerPin) * 11.71875; // convert the ADC value to W
-    }
-    else
-    {
-      coolingPower = 0;
-    }
+    // if (desiredTemperature < insideTemperature)
+    // {
+    //   // Read the cooling power from the input
+    //   // coolingPower = analogRead(coolingPowerPin) * 11.71875; // convert the ADC value to W
+
+    // }
+    // else
+    // {
+    //   coolingPower = 0;
+    // }
     // coolingPower = 1000;
     // Calculate the heat transfer between the inside and outside
     float heatTransfer = (outsideTemperature - insideTemperature) / wallThermalResistance;
@@ -163,8 +175,123 @@ void receiveTask(void *pvParameters)
           desiredTemperature = setT;
           sendAck();
         }
+        else if (doc.containsKey("start"))
+        {
+          //start compressor task
+          bool start = doc["start"];
+          if (start)
+          {
+            vTaskResume(compressorTaskHandle);
+          }
+          else
+          {
+            vTaskSuspend(compressorTaskHandle);
+          }
+        }
       }
     }
     taskYIELD();
+  }
+}
+
+void compressorTask(void *pvParameters)
+{
+  while (1)
+  {
+    if (initState)
+    {
+      if (desiredTemperature < insideTemperature)
+      {
+        coolingPower = 5000;
+        comp[0] = 1;
+        comp[1] = 1;
+        StaticJsonDocument<32> doc;
+        // Add key-value pairs to the document
+        doc["comA"] = 1;
+        doc["comB"] = 1;
+        size_t jsonStringSize = measureJson(doc);
+        char jsonStringBuffer[JSON_BUFFER_SIZE];
+        serializeJson(doc, jsonStringBuffer, jsonStringSize + 1);
+        // Send the JSON string to the output task
+        xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+      }
+      else
+      {
+        coolingPower = 0;
+        initState = false;
+        comp[0] = 1; //setting compressor to 1 so to select the compressor after init and first phase complete
+        comp[1] = 0;
+        StaticJsonDocument<32> doc;
+        // Add key-value pairs to the document
+        doc["comA"] = 0;
+        doc["comB"] = 0;
+        size_t jsonStringSize = measureJson(doc);
+        char jsonStringBuffer[JSON_BUFFER_SIZE];
+        serializeJson(doc, jsonStringBuffer, jsonStringSize + 1);
+        // Send the JSON string to the output task
+        xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+        
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        //start load balancer task
+        vTaskResume(loadBalanceTaskHandle);
+      }
+      vTaskDelay(pdMS_TO_TICKS(500));
+    }
+    else
+    {
+      if (desiredTemperature < insideTemperature)
+      {
+        coolingPower = 2500;
+        StaticJsonDocument<32> doc;
+        // Add key-value pairs to the document
+        doc["comA"] = comp[0];
+        doc["comB"] = comp[1];
+        size_t jsonStringSize = measureJson(doc);
+        char jsonStringBuffer[JSON_BUFFER_SIZE];
+        serializeJson(doc, jsonStringBuffer, jsonStringSize + 1);
+        // Send the JSON string to the output task
+        xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+        vTaskDelay(pdMS_TO_TICKS(500));
+      }
+      else
+      {
+        coolingPower = 0;
+        StaticJsonDocument<32> doc;
+        // Add key-value pairs to the document
+        doc["comA"] = 0;
+        doc["comB"] = 0;
+        size_t jsonStringSize = measureJson(doc);
+        char jsonStringBuffer[JSON_BUFFER_SIZE];
+        serializeJson(doc, jsonStringBuffer, jsonStringSize + 1);
+        // Send the JSON string to the output task
+        xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+        vTaskDelay(pdMS_TO_TICKS(2000)); //wait for 2 seconds before switching on compressor
+      }
+    }
+  }
+}
+
+void loadBalanceTask(void *pvParameters)
+{
+  // Loop forever
+  while (1)
+  {
+    //switching compressor every 15 seconds
+    if (comp[0] == 1 && comp[1] == 0)
+    {
+      vTaskDelay(pdMS_TO_TICKS(15000));
+      comp[0] = 0;
+      comp[1] = 1;
+    }
+    else if(comp[0] == 0 && comp[1] == 1)
+    {
+      vTaskDelay(pdMS_TO_TICKS(15000));
+      comp[0] = 1;
+      comp[1] = 0;
+    }
+    else
+    {
+      vTaskDelay(pdMS_TO_TICKS(500));
+    }
   }
 }

@@ -53,7 +53,7 @@ Item {
 
         Rectangle {
             id: slider
-            x: 1; y: 1; width: 30; height: 14
+            x: 45; y: 1; width: 30; height: 14
             radius: 6
             antialiasing: true
             gradient: Gradient {

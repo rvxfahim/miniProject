@@ -1,3 +1,3 @@
 {
-    "files": ["needle.png","Dial.qml","background.png","main.py","overlay.png","Page2.qml","main.qml","needle_shadow.png","page2_bg.jpg","DialControl.qml"]
+    "files": ["Page2.qml","main.py","Dial.qml","needle.png","DialControl.qml","overlay.png","page2_bg.jpg","background.png","main.qml","needle_shadow.png","led_green.png","led_red.png"]
 }

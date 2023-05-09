@@ -28,25 +28,6 @@ Rectangle {
         x: 79
         y: 333
     }
-    Slider {
-        id: slider
-        x: 28
-        y: 185
-        rotation: -90
-        value: 0.5
-
-        Text {
-            id: text1
-            y: 12
-            text: qsTr("Set Temperature")
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            font.pixelSize: 18
-            anchors.leftMargin: 150
-            anchors.bottomMargin: 12
-            rotation: 90
-        }
-    }
 
     ChartView {
         id: chartView
@@ -77,17 +58,84 @@ Rectangle {
             //                            labelFormat: "%.0f"
         }
     }
+    Button {
+        id: roundButton
+        x: 205
+        y: 55
+        width: 100
+        height: 100
+        text: "+"
+        checkable: true
+        background: Image {
+            id: btnImageA
+            source: roundButton.checked ? "led_green.png" : "led_red.png"
+        }
+        Text {
+            id: text1
+            x: -30
+            y: -38
+            width: 160
+            height: 28
+            text: qsTr("Compressor A")
+            font.pixelSize: 28
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+
+    Button {
+        id: roundButton1
+        x: 557
+        y: 55
+        width: 100
+        height: 100
+        text: "+"
+        checkable: true
+        background: Image {
+            id: btnImageB
+            source: roundButton1.checked ? "led_green.png" : "led_red.png"
+        }
+        Text {
+            id: text2
+            x: -36
+            y: -43
+            text: qsTr("Compressor B")
+            font.pixelSize: text1.font.pixelSize
+        }
+    }
+
+    Button {
+        id: roundButton2
+        x: 920
+        y: 55
+        width: 100
+        height: 100
+        text: "+"
+        onClicked:
+        {
+            backend.startController()
+        }
+        Text {
+            id: text3
+            x: 18
+            y: -41
+            width: 64
+            height: 38
+            text: qsTr("Start")
+            font.pixelSize: text2.font.pixelSize
+        }
+    }
+
     Connections {
         target: backend
         function onTextReceived(in_temp, currTime){
-//            textArea.append(qsTr(in_temp) +" "+ qsTr(currTime))
-//            if(textArea.lineCount > 10)
-//            {
-//                textArea.clear();
-//            }
+            //            textArea.append(qsTr(in_temp) +" "+ qsTr(currTime))
+            //            if(textArea.lineCount > 10)
+            //            {
+            //                textArea.clear();
+            //            }
         }
         function onTempValue(in_temp, currTime) {
-//            console.log("got values " + currTime + " ; " + in_temp)
+            //            console.log("got values " + currTime + " ; " + in_temp)
             tempSeries.append(currTime, in_temp)
             // update the x axis range if necessary
             if (currTime > axisX.max) {
@@ -95,7 +143,48 @@ Rectangle {
                 axisX.min = currTime - 49
             }
         }
+        function onComA(val){
+            if(val===1)
+            {
+                roundButton.checked = true
+            }
+            else
+                roundButton.checked = false
+        }
+        function onComB(val){
+            if(val===1)
+            {
+                roundButton1.checked = true
+            }
+            else
+                roundButton1.checked = false
+        }
     }
+
+    Button {
+        id: roundButton3
+        x: 1129
+        y: 55
+        width: 100
+        height: 100
+        text: "+"
+        onClicked:
+        {
+            backend.stopController()
+        }
+        Text {
+            x: 18
+            y: -41
+            width: 64
+            height: 38
+            text: qsTr("Stop")
+            font.pixelSize: text2.font.pixelSize
+        }
+    }
+
+
+
+
 
 
 

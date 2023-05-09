@@ -64,6 +64,10 @@ class SerialThread(QThread):
                         if 'inT' in jsonData and 'tm' in jsonData:
                             main.textReceived.emit(jsonData['inT'],jsonData['tm'])
                             main.tempValue.emit(jsonData['inT'],jsonData['tm'])
+                        elif 'comA' in jsonData:
+                            main.comA.emit(jsonData['comA'])
+                        elif 'comB' in jsonData:
+                            main.comB.emit(jsonData['comB'])
                         elif 'ack' in jsonData:
                             main.ack = jsonData['ack']
                             print("ack received")
@@ -100,16 +104,22 @@ class SerialsendThread(QThread):
         global timeout
         while True:
             self.jitSend()
+            QThread.msleep(25)
     # @jit(nopython=True)
     def jitSend(self):
         start_time = time.time()
         if main.connectionEstablished:
+            #keep a backup of the 1st item in queue
+            backup = main.queue[0]
             self.sendSerial()
             # if main.ack is not 1 or timeout is True, stay in while loop
             print("waiting for ack or timeout in while loop")
             while main.ack != 1:
                 difference = time.time()-start_time
+                print(difference)
                 if difference > 1:
+                    #if timeout, restore backup in queue
+                    main.queue.insert(0, backup)
                     break
                 # print(time.time()-start_time)
             start_time = time.time()
@@ -144,6 +154,8 @@ class MainWindow(QObject):
     textReceived = Signal(float, float)
     tempValue = Signal(float, float)
     appLoad = Signal()
+    comA = Signal(int)
+    comB = Signal(int)
     connectionEstablished = False
     ser = None
     busBusy = False
@@ -201,6 +213,7 @@ class MainWindow(QObject):
     @Slot(float)
     def setTemp(self, val):
         #format value to 2 decimal places
+        print("setTemp called from QML")
         val = round(val, 2)
         #make a json string with temperature value
         jsonString = json.dumps({"setT": val})
@@ -210,6 +223,25 @@ class MainWindow(QObject):
                 self.queue[i] = jsonString
                 break
         self.queue.append(jsonString)
+    @Slot()
+    def startController(self):
+        print("startController called from QML")
+        jsonString = json.dumps({"start": 1})
+        for i in range(len(self.queue)):
+            if 'start' in self.queue[i]:
+                self.queue[i] = jsonString
+                break
+        self.queue.append(jsonString)
+    @Slot()
+    def stopController(self):
+        print("stopController called from QML")
+        jsonString = json.dumps({"start": 0})
+        for i in range(len(self.queue)):
+            if 'stop' in self.queue[i]:
+                self.queue[i] = jsonString
+                break
+        self.queue.append(jsonString)
+        
 if __name__ == "__main__":
 
     # app = QGuiApplication(sys.argv)
