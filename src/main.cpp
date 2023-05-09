@@ -186,6 +186,7 @@ void receiveTask(void *pvParameters)
           else
           {
             vTaskSuspend(compressorTaskHandle);
+            coolingPower = 0;
           }
         }
       }
@@ -237,7 +238,7 @@ void compressorTask(void *pvParameters)
       }
       vTaskDelay(pdMS_TO_TICKS(500));
     }
-    else
+    else // if not init state
     {
       if (desiredTemperature < insideTemperature)
       {

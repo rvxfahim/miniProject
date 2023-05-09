@@ -64,9 +64,8 @@ class SerialThread(QThread):
                         if 'inT' in jsonData and 'tm' in jsonData:
                             main.textReceived.emit(jsonData['inT'],jsonData['tm'])
                             main.tempValue.emit(jsonData['inT'],jsonData['tm'])
-                        elif 'comA' in jsonData:
+                        elif 'comA' in jsonData and 'comB' in jsonData:
                             main.comA.emit(jsonData['comA'])
-                        elif 'comB' in jsonData:
                             main.comB.emit(jsonData['comB'])
                         elif 'ack' in jsonData:
                             main.ack = jsonData['ack']

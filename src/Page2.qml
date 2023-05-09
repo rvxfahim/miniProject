@@ -155,9 +155,13 @@ Rectangle {
             if(val===1)
             {
                 roundButton1.checked = true
+                console.log("com b set")
             }
             else
+            {
                 roundButton1.checked = false
+                console.log("com b unset")
+            }
         }
     }
 
