@@ -102,9 +102,9 @@ class SerialsendThread(QThread):
         print("serialsend thread running")
         global timeout
         while True:
-            print("jitsend calling")
+            # print("jitsend calling")
             self.jitSend()
-            print("sleep for 25ms")
+            # print("sleep for 25ms")
             QThread.msleep(25)
     # @jit(nopython=True)
     def jitSend(self):
@@ -242,6 +242,7 @@ class MainWindow(QObject):
                 self.queue[i] = jsonString
                 break
         self.queue.append(jsonString)
+        
     @Slot()
     def stopController(self):
         print("stopController called from QML")
@@ -251,7 +252,23 @@ class MainWindow(QObject):
                 self.queue[i] = jsonString
                 break
         self.queue.append(jsonString)
-        
+    @Slot(int)
+    def setOuttemp(self, val):
+        jsonString = json.dumps({"outT": val})
+        for i in range(len(self.queue)):
+            if 'outT' in self.queue[i]:
+                self.queue[i] = jsonString
+                break
+        self.queue.append(jsonString)
+    @Slot(int)
+    def setSwitchtime(self, val):
+        val = val*1000
+        jsonString = json.dumps({"switchT": val})
+        for i in range(len(self.queue)):
+            if 'switchT' in self.queue[i]:
+                self.queue[i] = jsonString
+                break
+        self.queue.append(jsonString)
 if __name__ == "__main__":
 
     # app = QGuiApplication(sys.argv)
