@@ -222,8 +222,8 @@ Rectangle {
         value: 30
         Text {
             id: text5
-            x: -189
-            y: 0
+            x: -193
+            y: 8
             width: 180
             height: 48
             color: "#ffffff"

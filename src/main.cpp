@@ -121,7 +121,7 @@ void simulationTask(void *pvParameters)
     size_t jsonStringSize = measureJson(doc);
     serializeJson(doc, jsonStringBuffer, jsonStringSize + 1);
     // Send the JSON string to the output task
-    xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+    xQueueSend(queueHandle, jsonStringBuffer, portMAX_DELAY);
     // Delay for a short time before repeating the loop
     vTaskDelay( 300 / portTICK_PERIOD_MS );
   }
@@ -134,7 +134,7 @@ void printTask(void *pvParameters)
   {
     // Create a JSON document
     char jsonStringBuffer[JSON_BUFFER_SIZE];
-    xQueueReceive(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+    xQueueReceive(queueHandle, jsonStringBuffer, portMAX_DELAY);
     Serial.println(jsonStringBuffer);
     // vTaskDelay(pdMS_TO_TICKS(50));
   }
@@ -190,7 +190,7 @@ void receiveTask(void *pvParameters)
             char jsonStringBuffer[JSON_BUFFER_SIZE];
             serializeJson(doc2, jsonStringBuffer, jsonStringSize + 1);
             // Send the JSON string to the output task
-            xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+            xQueueSend(queueHandle, jsonStringBuffer, portMAX_DELAY);
           }
         }
         else if (recdoc.containsKey("outT"))
@@ -237,7 +237,7 @@ void compressorTask(void *pvParameters)
           char jsonStringBuffer[JSON_BUFFER_SIZE];
           serializeJson(doc2, jsonStringBuffer, jsonStringSize + 1);
           // Send the JSON string to the output task
-          xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+          xQueueSend(queueHandle, jsonStringBuffer, portMAX_DELAY);
         }
         initStatusupdate = true;
       }
@@ -259,7 +259,7 @@ void compressorTask(void *pvParameters)
           char jsonStringBuffer[JSON_BUFFER_SIZE];
           serializeJson(doc2, jsonStringBuffer, jsonStringSize + 1);
           // Send the JSON string to the output task
-          xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+          xQueueSend(queueHandle, jsonStringBuffer, portMAX_DELAY);
         }
         initStatusupdate2 = true;
         vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS(1500) );
@@ -287,7 +287,7 @@ void compressorTask(void *pvParameters)
           char jsonStringBuffer[JSON_BUFFER_SIZE];
           serializeJson(doc2, jsonStringBuffer, jsonStringSize + 1);
           // Send the JSON string to the output task
-          xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+          xQueueSend(queueHandle, jsonStringBuffer, portMAX_DELAY);
     
         vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS(500) );
       }
@@ -306,7 +306,7 @@ void compressorTask(void *pvParameters)
           char jsonStringBuffer[JSON_BUFFER_SIZE];
           serializeJson(doc2, jsonStringBuffer, jsonStringSize + 1);
           // Send the JSON string to the output task
-          xQueueSend(queueHandle, &jsonStringBuffer, portMAX_DELAY);
+          xQueueSend(queueHandle, jsonStringBuffer, portMAX_DELAY);
         
         
 
