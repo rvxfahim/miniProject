@@ -4,7 +4,9 @@ A real-time embedded HVAC (Heating, Ventilation, and Air Conditioning) controlle
 
 ## Demo
 
-https://github.com/rvxfahim/miniProject/assets/demo.mp4
+https://github.com/rvxfahim/miniProject/raw/main/demo.mp4
+
+[Download demo video](./demo.mp4)
 
 ## Overview
 
@@ -48,7 +50,7 @@ The GUI uses multi-threading to handle:
 
 ### Communication Protocol
 
-JSON messages are exchanged over serial connection (9600 baud):
+JSON messages are exchanged over serial connection (Arduino configured for 9600 baud, GUI allows configurable baud rate):
 
 **From GUI to Arduino**:
 - `{"setT": <float>}` - Set desired temperature
@@ -111,8 +113,9 @@ python main.py
 
 1. Upload the Arduino firmware to your board
 2. Launch the Python GUI application
-3. Select the correct serial port and baud rate (9600) from the Configuration tab
-4. Click Connect to establish communication
+3. Select the correct serial port from the Configuration tab
+4. Set the baud rate to 9600 to match the Arduino configuration
+5. Click Connect to establish communication
 5. Switch to the Control tab
 6. Set desired temperature and outside temperature
 7. Click Start to begin HVAC control
