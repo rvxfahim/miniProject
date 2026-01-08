@@ -116,10 +116,10 @@ python main.py
 3. Select the correct serial port from the Configuration tab
 4. Set the baud rate to 9600 to match the Arduino configuration
 5. Click Connect to establish communication
-5. Switch to the Control tab
-6. Set desired temperature and outside temperature
-7. Click Start to begin HVAC control
-8. Monitor real-time temperature changes and compressor status
+6. Switch to the Control tab
+7. Set desired temperature and outside temperature
+8. Click Start to begin HVAC control
+9. Monitor real-time temperature changes and compressor status
 
 ## Project Structure
 
