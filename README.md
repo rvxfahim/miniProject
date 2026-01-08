@@ -4,8 +4,6 @@ A real-time embedded HVAC (Heating, Ventilation, and Air Conditioning) controlle
 
 ## Demo
 
-https://github.com/rvxfahim/miniProject/raw/main/demo.mp4
-
 [Download demo video](./demo.mp4)
 
 ## Overview
